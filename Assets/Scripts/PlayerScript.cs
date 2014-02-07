@@ -7,6 +7,9 @@ public class PlayerScript : MonoBehaviour {
 	public Vector2 mainThrustPower;
 	public Vector2 mainThrustLocation;
 
+	public Vector2 retroThrustPower;
+	public Vector2 retroThrustLocation;
+
 	public Vector2 leftThrustPower;
 	public Vector2 leftThrustLocation;
 
@@ -28,19 +31,28 @@ public class PlayerScript : MonoBehaviour {
 		Vector2 pos = transform.position;
 
 		GameObject mainThrust = GameObject.Find("Main Thrust");
+
 		mainThrustLocation = mainThrust.transform.position;
+
+		GameObject retroThrust = GameObject.Find("Retro Thrust");
+		retroThrustLocation = retroThrust.transform.position;
 
 		if(inputY > 0) {
 			mainThrustPower = (pos - mainThrustLocation).normalized;
 		} else { 
 			mainThrustPower = Vector2.zero; 
 		}
+		if(inputY < 0) {
+			retroThrustPower = (pos - retroThrustLocation).normalized / 2;
+		} else { 
+			retroThrustPower = Vector2.zero; 
+		}
 
 		GameObject leftThrust = GameObject.Find("Left Thrust");
 		leftThrustLocation = leftThrust.transform.position;
 		
 		if(inputX < 0) {
-			leftThrustPower = (pos - leftThrustLocation).normalized / 2;
+			leftThrustPower = (mainThrustLocation - leftThrustLocation).normalized / 2;
 		} else { 
 			leftThrustPower = Vector2.zero; 
 		}
@@ -49,7 +61,7 @@ public class PlayerScript : MonoBehaviour {
 		rightThrustLocation = rightThrust.transform.position;
 		
 		if(inputX > 0) {
-			rightThrustPower = (pos - rightThrustLocation).normalized / 2;
+			rightThrustPower = (mainThrustLocation - rightThrustLocation).normalized / 2;
 		} else { 
 			rightThrustPower = Vector2.zero; 
 		}
@@ -59,6 +71,7 @@ public class PlayerScript : MonoBehaviour {
 
 	void FixedUpdate() {
 		rigidbody2D.AddForceAtPosition(mainThrustPower, mainThrustLocation);
+		rigidbody2D.AddForceAtPosition(retroThrustPower, mainThrustLocation);
 		rigidbody2D.AddForceAtPosition(leftThrustPower, mainThrustLocation);
 		rigidbody2D.AddForceAtPosition(rightThrustPower, mainThrustLocation);
 	}
