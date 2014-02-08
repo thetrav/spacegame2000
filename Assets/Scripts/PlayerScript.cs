@@ -1,24 +1,54 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 
 public class PlayerScript : MonoBehaviour {
 
-//	public Vector2 accel = new Vector2(1, 1);
-	public Vector2 mainThrustPower;
-	public Vector2 mainThrustLocation;
+	public class Thruster {
+		public Thruster(string name, Vector2 direction, Vector2 position, Vector2 control) {
+			this.name = name;
+			this.direction = direction;
+			this.position = position;
+			this.control = control;
+		}
 
-	public Vector2 retroThrustPower;
-	public Vector2 retroThrustLocation;
+		public string name;
+		public Vector2 direction;
+		public Vector2 position;
+		public float magnitude = 0f;
+		public Vector2 control;
+	}
 
-	public Vector2 leftThrustPower;
-	public Vector2 leftThrustLocation;
+	static Vector2 v2(float x, float y) {
+		return new Vector2 (x, y);
+	}
 
-	public Vector2 rightThrustPower;
-	public Vector2 rightThrustLocation;
+	public List<Thruster> thrusters = new List<Thruster>() {
+		new Thruster("main",  v2( 0.0f, 1.0f), v2( 0.0f, -1.2f), v2( 0,  1)),
+		new Thruster("retro", v2( 0.0f,-0.5f), v2( 0.0f,  1.2f), v2( 0, -1)),
+		new Thruster("left",  v2( 0.5f, 0.0f), v2(-1.0f, -1.2f), v2( 1,  0)),
+		new Thruster("right", v2(-0.5f, 0.0f), v2( 1.0f, -1.2f), v2(-1,  0))
+	};
 
 	// Use this for initialization
 	void Start () {
 	
+	}
+
+	bool matchDir(float a, float b) {
+		return (a==0 && b == 0) || (a < 0 && b < 0) || (a > 0 && b > 0);
+	}
+
+	void updateThrusters(Vector2 c) {
+		foreach (Thruster thruster in thrusters) {
+			Vector2 tc = thruster.control;
+			if(matchDir (c.x, tc.x) && matchDir (c.y, tc.y)) {
+				thruster.magnitude = 0.1f;
+			} else {
+				thruster.magnitude = 0f;
+			}
+		}
 	}
 
 	// Update is called once per frame
@@ -26,53 +56,35 @@ public class PlayerScript : MonoBehaviour {
 		float inputX = Input.GetAxis("Horizontal");
 		float inputY = Input.GetAxis("Vertical");
 
+		updateThrusters (v2(inputX, inputY));
+	}
 
-		//calculate position and angle of main thruster
-		Vector2 pos = transform.position;
+	Vector2 localToGlobal(Vector2 v2) {
+		Vector3 v3 = transform.TransformPoint (v2);
+		return new Vector2 (v3.x, v3.y);
+	}
 
-		GameObject mainThrust = GameObject.Find("Main Thrust");
+	void applyThrust(Vector2 force, Vector2 position) {
+		rigidbody2D.AddForceAtPosition(force, position);
+	}
 
-		mainThrustLocation = mainThrust.transform.position;
+	void applyThrusters() {
+		Vector2 shipPos = transform.position;
+		foreach (Thruster thruster in thrusters) {
+			Vector2 pos = localToGlobal(thruster.position);
+			Vector2 dir = localToGlobal(thruster.direction) - shipPos;
+			Vector2 force = dir * thruster.magnitude;
 
-		GameObject retroThrust = GameObject.Find("Retro Thrust");
-		retroThrustLocation = retroThrust.transform.position;
-
-		if(inputY > 0) {
-			mainThrustPower = (pos - mainThrustLocation).normalized;
-		} else { 
-			mainThrustPower = Vector2.zero; 
+			Debug.DrawLine(pos, pos - dir, Color.white, 0f, false);
+			if(thruster.magnitude > 0) {
+				applyThrust (force, pos);
+				Debug.DrawLine(pos, pos - force, Color.red, 0f, false);
+			}
 		}
-		if(inputY < 0) {
-			retroThrustPower = (pos - retroThrustLocation).normalized / 2;
-		} else { 
-			retroThrustPower = Vector2.zero; 
-		}
-
-		GameObject leftThrust = GameObject.Find("Left Thrust");
-		leftThrustLocation = leftThrust.transform.position;
-		
-		if(inputX < 0) {
-			leftThrustPower = (mainThrustLocation - leftThrustLocation).normalized / 2;
-		} else { 
-			leftThrustPower = Vector2.zero; 
-		}
-
-		GameObject rightThrust = GameObject.Find("Right Thrust");
-		rightThrustLocation = rightThrust.transform.position;
-		
-		if(inputX > 0) {
-			rightThrustPower = (mainThrustLocation - rightThrustLocation).normalized / 2;
-		} else { 
-			rightThrustPower = Vector2.zero; 
-		}
-		//calculate position and angle of manouver thruster
-
 	}
 
 	void FixedUpdate() {
-		rigidbody2D.AddForceAtPosition(mainThrustPower, mainThrustLocation);
-		rigidbody2D.AddForceAtPosition(retroThrustPower, mainThrustLocation);
-		rigidbody2D.AddForceAtPosition(leftThrustPower, mainThrustLocation);
-		rigidbody2D.AddForceAtPosition(rightThrustPower, mainThrustLocation);
+		applyThrusters ();
 	}
+	
 }
