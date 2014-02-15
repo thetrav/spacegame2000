@@ -20,7 +20,7 @@ public class DamageScript : MonoBehaviour {
 		if (shot == null || shot.firer == gameObject) {
 			return;
 		} else {
-			Debug.Log ("shot hit gameObject="+shot.firer +" doesn't match this one"+gameObject);
+//			Debug.Log ("shot hit gameObject="+shot.firer +" doesn't match this one"+gameObject);
 			health -= shot.damage;
 			Destroy(shot.gameObject);
 		}

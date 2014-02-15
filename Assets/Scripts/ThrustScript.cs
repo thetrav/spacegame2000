@@ -5,21 +5,16 @@ using System.Collections.Generic;
 
 public class ThrustScript : MonoBehaviour {
 	
-	public string up;
-	public string down;
-	public string left;
-	public string right;
-	
-	public Dictionary<String, String> controls;
+	public delegate bool input();
 	
 	public class Thruster {
-		public Thruster(string name, Vector2 direction, Vector2 position) {
-			this.name = name;
+		public Thruster(input active, Vector2 direction, Vector2 position) {
+			this.active = active;
 			this.direction = direction;
 			this.position = position;
 		}
 		
-		public string name;
+		public input active;
 		public Vector2 direction;
 		public Vector2 position;
 		public float magnitude = 0f;
@@ -30,21 +25,22 @@ public class ThrustScript : MonoBehaviour {
 	}
 	
 	public List<Thruster> thrusters;
+	public ControllerScript controller;
 	
 	// Use this for initialization
 	void Start () {
-		Debug.Log ("up=" + up);
+		controller = GetComponent<ControllerScript>();
 		thrusters = new List<Thruster>() {
-			new Thruster(up,  v2( 0.0f, 1.0f), v2( 0.0f, -1.2f)),
-			new Thruster(down, v2( 0.0f,-0.5f), v2( 0.0f,  1.2f)),
-			new Thruster(left,  v2( 0.5f, 0.0f), v2(-1.0f, -1.2f)),
-			new Thruster(right, v2(-0.5f, 0.0f), v2( 1.0f, -1.2f))
+			new Thruster(delegate() {return controller.up;},  v2( 0.0f, 1.0f), v2( 0.0f, -1.2f)),
+			new Thruster(delegate() {return controller.down;}, v2( 0.0f,-0.5f), v2( 0.0f,  1.2f)),
+			new Thruster(delegate() {return controller.left;},  v2( 0.5f, 0.0f), v2(-1.0f, -1.2f)),
+			new Thruster(delegate() {return controller.right;}, v2(-0.5f, 0.0f), v2( 1.0f, -1.2f))
 		};
 	}
 	
 	void updateThrusters() {
 		foreach (Thruster thruster in thrusters) {
-			if(Input.GetKey (thruster.name)) {
+			if(thruster.active()) {
 				thruster.magnitude = 0.1f;
 			} else {
 				thruster.magnitude = 0f;
