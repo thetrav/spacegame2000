@@ -4,13 +4,14 @@ using System.Collections;
 public class WeaponScript : MonoBehaviour {
 
 	public TargetScript targetting;
+	private DebugScript debug;
 
 	public float rotation = 0.0f;
 	public float aimSpeed = 0.3f;
-	public float fireRate = 1f;
+	public float fireRate = 10f;
 	public float timeToNextShot = 0f;
 	public float shotPower = 1000f;
-	public float shotLife = 5f;
+	public float shotLife = 0.01f;
 	public float damage = 10f;
 	public float aimTollerance = 20.0f;
 
@@ -18,23 +19,15 @@ public class WeaponScript : MonoBehaviour {
 
 	public Transform shotPrefab;
 	
+	public void Start() {
+		debug = GetComponent<DebugScript>();
+	}
 	
-	private float trackTarget(GameObject target) {
-		Vector3 pos = transform.position;
-		Vector3 tPos = target.transform.position;
-		
-		Quaternion quat  = Quaternion.AngleAxis(transform.eulerAngles.z * -1, Vector3.forward);
-		Vector2 toTarg = quat * (tPos - pos).normalized;
-		
-		float angle = Vector2.Angle(Vector2.up, toTarg);
-		if(toTarg.x < 0) angle = angle * -1;
-		
-//		Debug.Log ("toTarg:"+ toTarg + " angle: "+angle);
-		
-//		Debug.DrawLine (Vector3.zero, pos, Color.blue, 0f, false);
-//		Debug.DrawLine (Vector3.zero, tPos, Color.red, 0f, false);
-//		Debug.DrawLine (Vector3.zero, toTarg, Color.yellow, 0f, false);
-//		Debug.DrawLine (Vector3.zero, Vector3.up, Color.green, 0f, false);
+	private float trackTarget() {
+		float angle = targetting.angleToTarget(transform);
+		if(debug.debug) {
+			Debug.Log("angle:"+angle);
+		}
 		
 		if (angle < aimSpeed  * -1) {
 			return aimSpeed;
@@ -49,7 +42,7 @@ public class WeaponScript : MonoBehaviour {
 	void Update () {
 		if(targetting.target == null) return;
 		
-		rotation = trackTarget(targetting.target);
+		rotation = trackTarget();
 		
 //		Debug.Log ("update rot:"+rotation);
 		attacking = (rotation * rotation <= 0.1f && timeToNextShot <= 0);

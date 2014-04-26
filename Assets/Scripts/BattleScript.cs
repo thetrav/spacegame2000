@@ -34,11 +34,10 @@ public class BattleScript : MonoBehaviour {
 	void Start () {
 		initPlayer ();
 
-		newEnemy (4,4);
-		
-		newEnemy (-4,3);
-		newEnemy (-5,-5);
-		newEnemy (8,-5);
+		newEnemy (20,20);
+		newEnemy (25,20);
+		newEnemy (20,25);
+		newEnemy (-20,20);
 	}
 	
 	// Update is called once per frame
